@@ -45,24 +45,27 @@ main(int argc, char* argv[])
     }
 
     // initialize default output device
-    if (!BASS_Init(-1,44100,0,NULL,NULL)) {
+    if (!BASS_Init(-1, 44100, 0, NULL, NULL)) {
 	ptn_error("Can't initialize device");
     }
 
     BASS_SetVolume(1);
-    BASS_SetConfig(BASS_CONFIG_NET_PLAYLIST,1); // enable playlist processing
-    BASS_SetConfig(BASS_CONFIG_NET_PREBUF,0); // minimize automatic pre-buffering, so we can do it (and display it) instead
-    BASS_SetConfigPtr(BASS_CONFIG_NET_PROXY,proxy); // setup proxy server location
+    BASS_SetConfig(BASS_CONFIG_NET_PLAYLIST, 1); // enable playlist processing
+    BASS_SetConfig(BASS_CONFIG_NET_PREBUF, 0); // minimize automatic pre-buffering, so we can do it (and display it) instead
+    BASS_SetConfigPtr(BASS_CONFIG_NET_PROXY, proxy); // setup proxy server location
 
     BASS_StreamFree(chan);
-    chan = BASS_StreamCreateURL(urls[0],0,BASS_STREAM_BLOCK|BASS_STREAM_STATUS|BASS_STREAM_AUTOFREE,ptn_status_proc,0);
+    chan = BASS_StreamCreateURL(urls[0], 0, BASS_STREAM_BLOCK | BASS_STREAM_STATUS | BASS_STREAM_AUTOFREE, ptn_status_proc, 0);
     
     while (1) {
-	int progress = BASS_StreamGetFilePosition(chan,BASS_FILEPOS_BUFFER)*100/BASS_StreamGetFilePosition(chan,BASS_FILEPOS_END);
-	if(progress > 75){
-	    BASS_ChannelPlay(chan,FALSE);
-	    while(1){}
+	int progress = (BASS_StreamGetFilePosition(chan, BASS_FILEPOS_BUFFER) * 100) / BASS_StreamGetFilePosition(chan, BASS_FILEPOS_END);
+
+	if (progress > 75) {
+	    BASS_ChannelPlay(chan, FALSE);
+	    while (1) {
+	    }
 	}
+
 	sleep(1);
     }
 
