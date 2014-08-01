@@ -14,12 +14,12 @@
 HSTREAM chan;
 
 
-const char  *urls[1] = {
+const char  *urls[] = {
     "http://app.musicone.fm/listen/mp3_160.pls"
 };
 
 
-char  proxy[100] = "";
+char  proxy[] = "";
 
 
 void
@@ -27,12 +27,6 @@ ptn_error(const char *error)
 {
     printf("%s", error);
     exit(1);
-}
-
-
-void CALLBACK
-ptn_status_proc(const void *buffer, DWORD length, void *user)
-{
 }
 
 
@@ -55,7 +49,7 @@ main(int argc, char* argv[])
     BASS_SetConfigPtr(BASS_CONFIG_NET_PROXY, proxy); // setup proxy server location
 
     BASS_StreamFree(chan);
-    chan = BASS_StreamCreateURL(urls[0], 0, BASS_STREAM_BLOCK | BASS_STREAM_STATUS | BASS_STREAM_AUTOFREE, ptn_status_proc, 0);
+    chan = BASS_StreamCreateURL(urls[0], 0, BASS_STREAM_BLOCK | BASS_STREAM_STATUS | BASS_STREAM_AUTOFREE, NULL, 0);
     
     while (1) {
 	int progress = (BASS_StreamGetFilePosition(chan, BASS_FILEPOS_BUFFER) * 100) / BASS_StreamGetFilePosition(chan, BASS_FILEPOS_END);
