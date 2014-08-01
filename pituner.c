@@ -9,9 +9,17 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <bass.h>
+#include <wiringPi.h>
+#include <lcd.h>
 
 
 HSTREAM chan;
+
+
+struct ptn_display{
+    char *line1;
+    char *line2;
+};
 
 
 const char  *urls[] = {
@@ -22,11 +30,29 @@ const char  *urls[] = {
 char  proxy[] = "";
 
 
+int ptn_display_fd = -1;
+
+
 void
 ptn_error(const char *error)
 {
     printf("%s", error);
     exit(1);
+}
+
+
+struct ptn_display
+ptn_get_stream_info()
+{
+    struct ptn_display info = {"Hello", "World"};
+    return info;
+}
+
+
+void
+ptn_update_display(struct ptn_display *info)
+{
+    lcdPrintf(ptn_display_fd, "%s\n%s", info->line1, info->line2);
 }
 
 
@@ -43,6 +69,18 @@ main(int argc, char* argv[])
 	ptn_error("Can't initialize device");
     }
 
+    // initialize WiringPi
+    int wp_error = wiringPiSetup();
+    if(wp_error){
+	ptn_error("Can't initialize WiringPi");
+    }
+
+    // initialize LCD
+    ptn_display_fd = lcdInit(2, 16, 8, 11, 10, 0, 1, 2, 3, 4, 5, 6, 7);
+    if(ptn_display_fd == -1){
+	ptn_error("Can't initialize LCD");
+    }
+
     BASS_SetVolume(1);
     BASS_SetConfig(BASS_CONFIG_NET_PLAYLIST, 1); // enable playlist processing
     BASS_SetConfig(BASS_CONFIG_NET_PREBUF, 0); // minimize automatic pre-buffering, so we can do it (and display it) instead
@@ -57,6 +95,9 @@ main(int argc, char* argv[])
 	if (progress > 75) {
 	    BASS_ChannelPlay(chan, FALSE);
 	    while (1) {
+		struct ptn_display info = ptn_get_stream_info();
+		ptn_update_display(&info);
+		sleep(1);
 	    }
 	}
 
