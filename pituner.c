@@ -26,12 +26,13 @@ struct ptn_display{
 };
 
 
-const char  *urls[] = {
-    "http://prem1.di.fm:80/vocaltrance_hi?643945d6aa1da7d29705e61b"
+const char  *ptn_station_urls[] = {
+    "http://prem1.di.fm:80/vocaltrance_hi?643945d6aa1da7d29705e61b",
+    "http://app.musicone.fm/listen/mp3_160.pls"
 };
 
 
-char  proxy[] = "";
+int ptn_station_url_i = 0;
 
 
 int ptn_display_fd = -1;
@@ -65,6 +66,35 @@ ptn_check_dial()
 {
     int p1_val = digitalRead(PTN_DIAL_PIN1);
     int p2_val = digitalRead(PTN_DIAL_PIN2);
+}
+
+
+void
+ptn_change_station(int offset)
+{
+    if(!offset)
+	return;
+
+    int i;
+    int j = ptn_station_url_i;
+
+    if (offset > 0) {
+	for (i = 1; i <= offset; i++) {
+	    j++;
+	    if (!ptn_station_urls[j])
+		j = 0;
+	}
+    }
+    else {
+	for (i = 1; i <= offset; i++) {
+	    j--;
+	    if (!j)
+		j = sizeof(j) - 1;
+	}
+    }
+
+    ptn_station_url_i = j;
+    printf("%s\n", ptn_station_urls[ptn_station_url_i]);
 }
 
 
@@ -102,10 +132,9 @@ main(int argc, char* argv[])
     BASS_SetVolume(1);
     BASS_SetConfig(BASS_CONFIG_NET_PLAYLIST, 1); // enable playlist processing
     BASS_SetConfig(BASS_CONFIG_NET_PREBUF, 0); // minimize automatic pre-buffering, so we can do it (and display it) instead
-    BASS_SetConfigPtr(BASS_CONFIG_NET_PROXY, proxy); // setup proxy server location
 
     BASS_StreamFree(chan);
-    chan = BASS_StreamCreateURL(urls[0], 0, BASS_STREAM_BLOCK | BASS_STREAM_STATUS | BASS_STREAM_AUTOFREE, NULL, 0);
+    chan = BASS_StreamCreateURL(ptn_station_urls[ptn_station_url_i], 0, BASS_STREAM_BLOCK | BASS_STREAM_STATUS | BASS_STREAM_AUTOFREE, NULL, 0);
     
     while (1) {
 	int progress = (BASS_StreamGetFilePosition(chan, BASS_FILEPOS_BUFFER) * 100) / BASS_StreamGetFilePosition(chan, BASS_FILEPOS_END);
