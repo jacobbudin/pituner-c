@@ -23,7 +23,7 @@ struct ptn_display{
 
 
 const char  *urls[] = {
-    "http://app.musicone.fm/listen/mp3_160.pls"
+    "http://prem1.di.fm:80/vocaltrance_hi?643945d6aa1da7d29705e61b"
 };
 
 
@@ -56,6 +56,14 @@ ptn_update_display(struct ptn_display *info)
 }
 
 
+void
+ptn_check_dial()
+{
+    int p1_val = digitalRead(4);
+    int p2_val = digitalRead(5);
+}
+
+
 int
 main(int argc, char* argv[])
 {
@@ -81,6 +89,12 @@ main(int argc, char* argv[])
 	ptn_error("Can't initialize LCD");
     }
 
+    // initialize GPIO pins for quadratic rotary encoder
+    pinMode(4, INPUT);
+    pullUpDnControl(4, PUD_UP);
+    pinMode(5, INPUT);
+    pullUpDnControl(5, PUD_UP);
+
     BASS_SetVolume(1);
     BASS_SetConfig(BASS_CONFIG_NET_PLAYLIST, 1); // enable playlist processing
     BASS_SetConfig(BASS_CONFIG_NET_PREBUF, 0); // minimize automatic pre-buffering, so we can do it (and display it) instead
@@ -97,6 +111,7 @@ main(int argc, char* argv[])
 	    while (1) {
 		struct ptn_display info = ptn_get_stream_info();
 		ptn_update_display(&info);
+		ptn_check_dial();
 		sleep(1);
 	    }
 	}
