@@ -113,13 +113,13 @@ main(int argc, char* argv[])
 
     // initialize WiringPi
     int wp_error = wiringPiSetup();
-    if(wp_error){
+    if (wp_error) {
 	ptn_error("Can't initialize WiringPi");
     }
 
     // initialize LCD
     ptn_display_fd = lcdInit(2, 16, 8, 11, 10, 0, 1, 2, 3, 4, 5, 6, 7);
-    if(ptn_display_fd == -1){
+    if (ptn_display_fd == -1) {
 	ptn_error("Can't initialize LCD");
     }
 
