@@ -13,6 +13,10 @@
 #include <lcd.h>
 
 
+#define PTN_DIAL_PIN1 4
+#define PTN_DIAL_PIN2 5
+
+
 HSTREAM chan;
 
 
@@ -59,8 +63,8 @@ ptn_update_display(struct ptn_display *info)
 void
 ptn_check_dial()
 {
-    int p1_val = digitalRead(4);
-    int p2_val = digitalRead(5);
+    int p1_val = digitalRead(PTN_DIAL_PIN1);
+    int p2_val = digitalRead(PTN_DIAL_PIN2);
 }
 
 
@@ -90,10 +94,10 @@ main(int argc, char* argv[])
     }
 
     // initialize GPIO pins for quadratic rotary encoder
-    pinMode(4, INPUT);
-    pullUpDnControl(4, PUD_UP);
-    pinMode(5, INPUT);
-    pullUpDnControl(5, PUD_UP);
+    pinMode(PTN_DIAL_PIN1, INPUT);
+    pullUpDnControl(PTN_DIAL_PIN1, PUD_UP);
+    pinMode(PTN_DIAL_PIN2, INPUT);
+    pullUpDnControl(PTN_DIAL_PIN2, PUD_UP);
 
     BASS_SetVolume(1);
     BASS_SetConfig(BASS_CONFIG_NET_PLAYLIST, 1); // enable playlist processing
