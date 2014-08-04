@@ -38,6 +38,10 @@ int ptn_station_url_i = 0;
 int ptn_display_fd = -1;
 
 
+int ptn_p1_val = -1;
+int ptn_p2_val = -1;
+
+
 void
 ptn_error(const char *error)
 {
@@ -61,11 +65,35 @@ ptn_update_display(struct ptn_display *info)
 }
 
 
-void
+int
 ptn_check_dial()
 {
     int p1_val = digitalRead(PTN_DIAL_PIN1);
     int p2_val = digitalRead(PTN_DIAL_PIN2);
+
+    if (ptn_p1_val == -1) {
+	ptn_p1_val = p1_val;
+	ptn_p2_val = p2_val;
+	return 0;
+    }
+
+    if (p1_val == ptn_p1_val &&
+	    p2_val == ptn_p2_val) {
+	return 0;
+    }
+
+    int change;
+
+    if (p1_val != ptn_p1_val) {
+	change = ((p1_val + p2_val) == 1) ? 1 : -1;
+	ptn_p1_val = p1_val;
+    }
+    else {
+	change = ((p1_val + p2_val) != 1) ? 1 : -1;
+	ptn_p2_val = p2_val;
+    }
+
+    return change;
 }
 
 
@@ -145,7 +173,8 @@ main(int argc, char* argv[])
 		struct ptn_display info = ptn_get_stream_info();
 		ptn_update_display(&info);
 		ptn_check_dial();
-		sleep(1);
+		sleep(5);
+		ptn_change_station(3);
 	    }
 	}
 
