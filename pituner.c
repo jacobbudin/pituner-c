@@ -11,6 +11,7 @@
 #include <bass.h>
 #include <wiringPi.h>
 #include <lcd.h>
+#include "parson.h"
 
 
 #define PTN_DIAL_PIN1 4
@@ -20,19 +21,21 @@
 HSTREAM chan;
 
 
+struct ptn_station{
+    char *name;
+    char *url;
+    struct ptn_station *next;
+    struct ptn_station *prev;
+};
+
+
 struct ptn_display{
     char *line1;
     char *line2;
 };
 
 
-const char  *ptn_station_urls[] = {
-    "http://prem1.di.fm:80/vocaltrance_hi?643945d6aa1da7d29705e61b",
-    "http://app.musicone.fm/listen/mp3_160.pls"
-};
-
-
-int ptn_station_url_i = 0;
+struct ptn_station  *ptn_current_station;
 
 
 int ptn_display_fd = -1;
@@ -62,6 +65,50 @@ void
 ptn_update_display(struct ptn_display *info)
 {
     lcdPrintf(ptn_display_fd, "%s\n%s", info->line1, info->line2);
+}
+
+
+void
+ptn_read_config()
+{
+    JSON_Value *root_value;
+    JSON_Array *stations;
+    JSON_Object *station;
+    int i;
+    struct ptn_station *s;
+    struct ptn_station *s_prev = NULL;
+
+    root_value = json_parse_file("stations.json");
+    if (json_value_get_type(root_value) != JSONArray) {
+	ptn_error("stations.json is not valid");
+    }
+
+    stations = json_value_get_array(root_value);
+    for (i = 0; i < json_array_get_count(stations); i++) {
+	station = json_array_get_object(stations, i);
+	s = malloc(sizeof(struct ptn_station));
+
+	if (!s_prev)
+	    ptn_current_station = s;
+
+	s->name = strdup(json_object_get_string(station, "name"));
+	s->url = strdup(json_object_get_string(station, "url"));
+	s->next = NULL;
+	s->prev = s_prev;
+	if (s_prev)
+	    s_prev->next = s;
+
+	s_prev = s;
+    }
+
+    json_value_free(root_value);
+}
+
+
+void
+ptn_free()
+{
+    // TODO: Free stations
 }
 
 
@@ -100,29 +147,6 @@ ptn_check_dial()
 void
 ptn_change_station(int offset)
 {
-    if(!offset)
-	return;
-
-    int i;
-    int j = ptn_station_url_i;
-
-    if (offset > 0) {
-	for (i = 1; i <= offset; i++) {
-	    j++;
-	    if (!ptn_station_urls[j])
-		j = 0;
-	}
-    }
-    else {
-	for (i = 1; i <= offset; i++) {
-	    j--;
-	    if (!j)
-		j = sizeof(j) - 1;
-	}
-    }
-
-    ptn_station_url_i = j;
-    printf("%s\n", ptn_station_urls[ptn_station_url_i]);
 }
 
 
@@ -151,6 +175,9 @@ main(int argc, char* argv[])
 	ptn_error("Can't initialize LCD");
     }
 
+    // load stations
+    ptn_read_config();
+
     // initialize GPIO pins for quadratic rotary encoder
     pinMode(PTN_DIAL_PIN1, INPUT);
     pullUpDnControl(PTN_DIAL_PIN1, PUD_UP);
@@ -162,7 +189,7 @@ main(int argc, char* argv[])
     BASS_SetConfig(BASS_CONFIG_NET_PREBUF, 0); // minimize automatic pre-buffering, so we can do it (and display it) instead
 
     BASS_StreamFree(chan);
-    chan = BASS_StreamCreateURL(ptn_station_urls[ptn_station_url_i], 0, BASS_STREAM_BLOCK | BASS_STREAM_STATUS | BASS_STREAM_AUTOFREE, NULL, 0);
+    chan = BASS_StreamCreateURL(ptn_current_station->url, 0, BASS_STREAM_BLOCK | BASS_STREAM_STATUS | BASS_STREAM_AUTOFREE, NULL, 0);
     
     while (1) {
 	int progress = (BASS_StreamGetFilePosition(chan, BASS_FILEPOS_BUFFER) * 100) / BASS_StreamGetFilePosition(chan, BASS_FILEPOS_END);
