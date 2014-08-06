@@ -167,6 +167,25 @@ ptn_check_dial()
 void
 ptn_change_station(int offset)
 {
+    struct ptn_station *s;
+    int i;
+
+    if (!offset)
+	return;
+
+    s = ptn_current_station;
+
+    for (i = 0; i < abs(offset); i++) {
+	if (offset > 0 && s->next)
+	    s = s->next;
+	else if (offset < 0 && s->prev)
+	    s = s->prev;
+    }
+
+    if (ptn_current_station == s)
+	return;
+    
+    ptn_current_station = s;
 }
 
 
@@ -209,6 +228,7 @@ main(int argc, char* argv[])
     BASS_SetConfig(BASS_CONFIG_NET_PREBUF, 0); // minimize automatic pre-buffering, so we can do it (and display it) instead
 
     BASS_StreamFree(chan);
+    ptn_change_station(0);
     chan = BASS_StreamCreateURL(ptn_current_station->url, 0, BASS_STREAM_BLOCK | BASS_STREAM_STATUS | BASS_STREAM_AUTOFREE, NULL, 0);
     
     while (1) {
@@ -220,8 +240,7 @@ main(int argc, char* argv[])
 		struct ptn_display info = ptn_get_stream_info();
 		ptn_update_display(&info);
 		ptn_check_dial();
-		sleep(5);
-		ptn_change_station(3);
+		sleep(1);
 	    }
 	}
 
