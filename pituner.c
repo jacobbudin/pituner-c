@@ -88,6 +88,9 @@ ptn_read_config()
 	station = json_array_get_object(stations, i);
 	s = malloc(sizeof(struct ptn_station));
 
+	if (!s)
+	    ptn_error("malloc() failed");
+
 	if (!s_prev)
 	    ptn_current_station = s;
 
