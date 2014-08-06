@@ -106,9 +106,29 @@ ptn_read_config()
 
 
 void
+ptn_reset_station()
+{
+    while (ptn_current_station->prev) {
+	ptn_current_station = ptn_current_station->prev;
+    }
+}
+
+
+void
 ptn_free()
 {
-    // TODO: Free stations
+    struct ptn_station *s;
+    struct ptn_station *s_next;
+
+    ptn_reset_station();
+
+    s = ptn_current_station;
+
+    while (s) {
+	s_next = s->next;
+	free(s);
+	s = s_next;
+    }
 }
 
 
