@@ -202,6 +202,10 @@ main(int argc, char* argv[])
 	ptn_error("Can't initialize device");
     }
 
+    if (geteuid() != 0) {
+	ptn_error("Must have superuser privileges to launch");
+    }
+
     // initialize WiringPi
     int wp_error = wiringPiSetup();
     if (wp_error) {
