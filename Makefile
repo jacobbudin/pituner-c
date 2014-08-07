@@ -1,3 +1,6 @@
+SHELL = /bin/sh
+.SUFFIXES:
+.SUFFIXES: .c .o
 CC = gcc
 CFLAGS = -g -Wall
 
