@@ -78,7 +78,7 @@ ptn_read_config()
     struct ptn_station *s;
     struct ptn_station *s_prev = NULL;
 
-    root_value = json_parse_file("stations.json");
+    root_value = json_parse_file("etc/stations.json");
     if (json_value_get_type(root_value) != JSONArray) {
 	ptn_error("stations.json is not valid");
     }
