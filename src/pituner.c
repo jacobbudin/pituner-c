@@ -8,6 +8,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <unistd.h>
+#include <getopt.h>
 #include <bass.h>
 #include <wiringPi.h>
 #include <lcd.h>
@@ -19,6 +20,9 @@
 
 
 HSTREAM chan;
+
+
+static int ptn_debug_mode = 0;
 
 
 struct ptn_station{
@@ -36,6 +40,9 @@ struct ptn_display{
 
 
 struct ptn_station  *ptn_current_station;
+
+
+char  *ptn_station_file = "etc/stations.json";
 
 
 int ptn_display_fd = -1;
@@ -78,7 +85,7 @@ ptn_read_config()
     struct ptn_station *s;
     struct ptn_station *s_prev = NULL;
 
-    root_value = json_parse_file("etc/stations.json");
+    root_value = json_parse_file(ptn_station_file);
     if (json_value_get_type(root_value) != JSONArray) {
 	ptn_error("stations.json is not valid");
     }
@@ -195,6 +202,47 @@ ptn_change_station(int offset)
 int
 main(int argc, char* argv[])
 {
+   int c;
+ 
+   while (1) {
+       static struct option long_options[] = {
+	   {"debug", no_argument, &ptn_debug_mode, 1},
+	   {"help", no_argument, 0, 'h'},
+	   {"stations", required_argument, 0, 's'},
+	   {0}
+       };
+
+       int option_index = 0;
+ 
+       c = getopt_long(argc, argv, "hs:", long_options, &option_index);
+ 
+       if (c == -1)
+	   break;
+ 
+       switch (c) {
+	 case 0:
+	     if (long_options[option_index].flag != 0)
+	         break;
+
+	     printf("option %s", long_options[option_index].name);
+
+	     if (optarg)
+	         printf(" with arg %s", optarg);
+
+	     printf("\n");
+	     break;
+ 
+	 case 's':
+	     ptn_station_file = strdup(optarg);
+	     break;
+ 
+	 case 'h':
+	     printf("Pituner\n");
+	     exit(0);
+	     break;
+	 }
+     }
+ 
     // check the correct BASS was loaded
     if (HIWORD(BASS_GetVersion()) != BASSVERSION) {
 	ptn_error("An incorrect version of BASS was loaded");
