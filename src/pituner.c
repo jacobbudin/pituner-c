@@ -26,16 +26,16 @@ static int ptn_debug_mode = 0;
 
 
 struct ptn_station{
-    char *name;
-    char *url;
-    struct ptn_station *next;
-    struct ptn_station *prev;
+	char *name;
+	char *url;
+	struct ptn_station *next;
+	struct ptn_station *prev;
 };
 
 
 struct ptn_display{
-    char *line1;
-    char *line2;
+	char *line1;
+	char *line2;
 };
 
 
@@ -55,147 +55,147 @@ int ptn_p2_val = -1;
 void
 ptn_error(const char *error)
 {
-    fprintf(stderr, "Pituner: %s\n", error);
-    exit(1);
+	fprintf(stderr, "Pituner: %s\n", error);
+	exit(1);
 }
 
 
 struct ptn_display
 ptn_get_stream_info()
 {
-    struct ptn_display info = {"Hello", "World"};
-    return info;
+	struct ptn_display info = {"Hello", "World"};
+	return info;
 }
 
 
 void
 ptn_update_display(struct ptn_display *info)
 {
-    lcdPrintf(ptn_display_fd, "%s\n%s", info->line1, info->line2);
+	lcdPrintf(ptn_display_fd, "%s\n%s", info->line1, info->line2);
 }
 
 
 void
 ptn_read_config()
 {
-    JSON_Value *root_value;
-    JSON_Array *stations;
-    JSON_Object *station;
-    int i;
-    struct ptn_station *s;
-    struct ptn_station *s_prev = NULL;
+	JSON_Value *root_value;
+	JSON_Array *stations;
+	JSON_Object *station;
+	int i;
+	struct ptn_station *s;
+	struct ptn_station *s_prev = NULL;
 
-    root_value = json_parse_file(ptn_station_file);
-    if (json_value_get_type(root_value) != JSONArray) {
-	ptn_error("stations.json is not valid");
-    }
+	root_value = json_parse_file(ptn_station_file);
+	if (json_value_get_type(root_value) != JSONArray) {
+		ptn_error("stations.json is not valid");
+	}
 
-    stations = json_value_get_array(root_value);
-    for (i = 0; i < json_array_get_count(stations); i++) {
-	station = json_array_get_object(stations, i);
-	s = malloc(sizeof(struct ptn_station));
+	stations = json_value_get_array(root_value);
+	for (i = 0; i < json_array_get_count(stations); i++) {
+		station = json_array_get_object(stations, i);
+		s = malloc(sizeof(struct ptn_station));
 
-	if (!s)
-	    ptn_error("malloc() failed");
+		if (!s)
+			ptn_error("malloc() failed");
 
-	if (!s_prev)
-	    ptn_current_station = s;
+		if (!s_prev)
+			ptn_current_station = s;
 
-	s->name = strdup(json_object_get_string(station, "name"));
-	s->url = strdup(json_object_get_string(station, "url"));
-	s->next = NULL;
-	s->prev = s_prev;
-	if (s_prev)
-	    s_prev->next = s;
+		s->name = strdup(json_object_get_string(station, "name"));
+		s->url = strdup(json_object_get_string(station, "url"));
+		s->next = NULL;
+		s->prev = s_prev;
+		if (s_prev)
+			s_prev->next = s;
 
-	s_prev = s;
-    }
+		s_prev = s;
+	}
 
-    json_value_free(root_value);
+	json_value_free(root_value);
 }
 
 
 void
 ptn_reset_station()
 {
-    while (ptn_current_station->prev) {
-	ptn_current_station = ptn_current_station->prev;
-    }
+	while (ptn_current_station->prev) {
+		ptn_current_station = ptn_current_station->prev;
+	}
 }
 
 
 void
 ptn_free()
 {
-    struct ptn_station *s;
-    struct ptn_station *s_next;
+	struct ptn_station *s;
+	struct ptn_station *s_next;
 
-    ptn_reset_station();
+	ptn_reset_station();
 
-    s = ptn_current_station;
+	s = ptn_current_station;
 
-    while (s) {
-	s_next = s->next;
-	free(s);
-	s = s_next;
-    }
+	while (s) {
+		s_next = s->next;
+		free(s);
+		s = s_next;
+	}
 }
 
 
 int
 ptn_check_dial()
 {
-    int p1_val = digitalRead(PTN_DIAL_PIN1);
-    int p2_val = digitalRead(PTN_DIAL_PIN2);
+	int p1_val = digitalRead(PTN_DIAL_PIN1);
+	int p2_val = digitalRead(PTN_DIAL_PIN2);
 
-    if (ptn_p1_val == -1) {
-	ptn_p1_val = p1_val;
-	ptn_p2_val = p2_val;
-	return 0;
-    }
+	if (ptn_p1_val == -1) {
+		ptn_p1_val = p1_val;
+		ptn_p2_val = p2_val;
+		return 0;
+	}
 
-    if (p1_val == ptn_p1_val &&
-	    p2_val == ptn_p2_val) {
-	return 0;
-    }
+	if (p1_val == ptn_p1_val &&
+			p2_val == ptn_p2_val) {
+		return 0;
+	}
 
-    int change;
+	int change;
 
-    if (p1_val != ptn_p1_val) {
-	change = ((p1_val + p2_val) == 1) ? 1 : -1;
-	ptn_p1_val = p1_val;
-    }
-    else {
-	change = ((p1_val + p2_val) != 1) ? 1 : -1;
-	ptn_p2_val = p2_val;
-    }
+	if (p1_val != ptn_p1_val) {
+		change = ((p1_val + p2_val) == 1) ? 1 : -1;
+		ptn_p1_val = p1_val;
+	}
+	else {
+		change = ((p1_val + p2_val) != 1) ? 1 : -1;
+		ptn_p2_val = p2_val;
+	}
 
-    return change;
+	return change;
 }
 
 
 void
 ptn_change_station(int offset)
 {
-    struct ptn_station *s;
-    int i;
+	struct ptn_station *s;
+	int i;
 
-    if (!offset)
-	return;
+	if (!offset)
+		return;
 
-    s = ptn_current_station;
+	s = ptn_current_station;
 
-    for (i = 0; i < abs(offset); i++) {
-	if (offset > 0 && s->next)
-	    s = s->next;
-	else if (offset < 0 && s->prev)
-	    s = s->prev;
-    }
+	for (i = 0; i < abs(offset); i++) {
+		if (offset > 0 && s->next)
+			s = s->next;
+		else if (offset < 0 && s->prev)
+			s = s->prev;
+	}
 
-    if (ptn_current_station == s)
-	return;
-    
-    ptn_current_station = s;
+	if (ptn_current_station == s)
+		return;
+	
+	ptn_current_station = s;
 }
 
 
@@ -205,105 +205,101 @@ main(int argc, char* argv[])
    int c;
  
    while (1) {
-       static struct option long_options[] = {
-	   {"debug", no_argument, &ptn_debug_mode, 1},
-	   {"help", no_argument, 0, 'h'},
-	   {"stations", required_argument, 0, 's'},
-	   {0}
-       };
+	   static struct option long_options[] = {
+		   {"debug", no_argument, &ptn_debug_mode, 1},
+		   {"help", no_argument, 0, 'h'},
+		   {"stations", required_argument, 0, 's'},
+		   {0}
+	   };
 
-       int option_index = 0;
+	   int option_index = 0;
  
-       c = getopt_long(argc, argv, "hs:", long_options, &option_index);
+	   c = getopt_long(argc, argv, "hs:", long_options, &option_index);
  
-       if (c == -1)
-	   break;
+	   if (c == -1)
+		   break;
  
-       switch (c) {
-	 case 0:
-	     if (long_options[option_index].flag != 0)
-	         break;
+	   switch (c) {
+		 case 0:
+			 if (long_options[option_index].flag != 0)
+				 break;
 
-	     printf("option %s", long_options[option_index].name);
+			 printf("option %s", long_options[option_index].name);
 
-	     if (optarg)
-	         printf(" with arg %s", optarg);
+			 if (optarg)
+				 printf(" with arg %s", optarg);
 
-	     printf("\n");
-	     break;
+			 printf("\n");
+			 break;
  
-	 case 's':
-	     ptn_station_file = strdup(optarg);
-	     break;
+		 case 's':
+			 ptn_station_file = strdup(optarg);
+			 break;
  
-	 case 'h':
-	     printf("Pituner\n");
-	     exit(0);
-	     break;
+		 case 'h':
+			 printf("Pituner\n");
+			 exit(0);
+			 break;
+		 }
 	 }
-     }
  
-    // check the correct BASS was loaded
-    if (HIWORD(BASS_GetVersion()) != BASSVERSION) {
-	ptn_error("An incorrect version of BASS was loaded");
-    }
+	// check the correct BASS was loaded
+	if (HIWORD(BASS_GetVersion()) != BASSVERSION)
+		ptn_error("An incorrect version of BASS was loaded");
 
-    // initialize default output device
-    if (!BASS_Init(-1, 44100, 0, NULL, NULL)) {
-	ptn_error("Can't initialize device");
-    }
+	// initialize default output device
+	if (!BASS_Init(-1, 44100, 0, NULL, NULL))
+		ptn_error("Can't initialize device");
 
-    if (geteuid() != 0) {
-	ptn_error("Must have superuser privileges to launch");
-    }
+	// must be superuser to use GPIO pins
+	if (geteuid() != 0)
+		ptn_error("Must have superuser privileges to launch");
 
-    // initialize WiringPi
-    int wp_error = wiringPiSetup();
-    if (wp_error) {
-	ptn_error("Can't initialize WiringPi");
-    }
+	// initialize WiringPi
+	int wp_error = wiringPiSetup();
+	if (wp_error)
+		ptn_error("Can't initialize WiringPi");
 
-    // initialize LCD
-    ptn_display_fd = lcdInit(2, 16, 8, 11, 10, 0, 1, 2, 3, 4, 5, 6, 7);
-    if (ptn_display_fd == -1) {
-	ptn_error("Can't initialize LCD");
-    }
+	// initialize LCD
+	ptn_display_fd = lcdInit(2, 16, 8, 11, 10, 0, 1, 2, 3, 4, 5, 6, 7);
+	if (ptn_display_fd == -1)
+		ptn_error("Can't initialize LCD");
 
-    // load stations
-    ptn_read_config();
+	// load stations
+	ptn_read_config();
 
-    // initialize GPIO pins for quadratic rotary encoder
-    pinMode(PTN_DIAL_PIN1, INPUT);
-    pullUpDnControl(PTN_DIAL_PIN1, PUD_UP);
-    pinMode(PTN_DIAL_PIN2, INPUT);
-    pullUpDnControl(PTN_DIAL_PIN2, PUD_UP);
+	// initialize GPIO pins for quadratic rotary encoder
+	pinMode(PTN_DIAL_PIN1, INPUT);
+	pullUpDnControl(PTN_DIAL_PIN1, PUD_UP);
+	pinMode(PTN_DIAL_PIN2, INPUT);
+	pullUpDnControl(PTN_DIAL_PIN2, PUD_UP);
 
-    BASS_SetVolume(1);
-    BASS_SetConfig(BASS_CONFIG_NET_PLAYLIST, 1); // enable playlist processing
-    BASS_SetConfig(BASS_CONFIG_NET_PREBUF, 0); // minimize automatic pre-buffering, so we can do it (and display it) instead
+	BASS_SetVolume(1);
+	BASS_SetConfig(BASS_CONFIG_NET_PLAYLIST, 1); // enable playlist processing
+	BASS_SetConfig(BASS_CONFIG_NET_PREBUF, 0); // minimize automatic pre-buffering, so we can do it (and display it) instead
 
-    BASS_StreamFree(chan);
-    ptn_change_station(0);
-    chan = BASS_StreamCreateURL(ptn_current_station->url, 0, BASS_STREAM_BLOCK | BASS_STREAM_STATUS | BASS_STREAM_AUTOFREE, NULL, 0);
-    
-    while (1) {
-	int progress = (BASS_StreamGetFilePosition(chan, BASS_FILEPOS_BUFFER) * 100) / BASS_StreamGetFilePosition(chan, BASS_FILEPOS_END);
+	BASS_StreamFree(chan);
+	ptn_change_station(0);
+	chan = BASS_StreamCreateURL(ptn_current_station->url, 0, BASS_STREAM_BLOCK | BASS_STREAM_STATUS | BASS_STREAM_AUTOFREE, NULL, 0);
+	
+	while (1) {
+		int progress = (BASS_StreamGetFilePosition(chan, BASS_FILEPOS_BUFFER) * 100) / BASS_StreamGetFilePosition(chan, BASS_FILEPOS_END);
 
-	if (progress > 75) {
-	    BASS_ChannelPlay(chan, FALSE);
-	    while (1) {
-		struct ptn_display info = ptn_get_stream_info();
-		ptn_update_display(&info);
-		ptn_check_dial();
+		if (progress > 75) {
+			BASS_ChannelPlay(chan, FALSE);
+			while (1) {
+				struct ptn_display info = ptn_get_stream_info();
+				ptn_update_display(&info);
+				ptn_check_dial();
+				sleep(1);
+			}
+		}
+
 		sleep(1);
-	    }
 	}
 
-	sleep(1);
-    }
+	BASS_StreamFree(chan);
+	BASS_Free();
 
-    BASS_StreamFree(chan);
-    BASS_Free();
-
-    return 0;
+	return 0;
 }
