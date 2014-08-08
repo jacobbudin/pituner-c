@@ -48,7 +48,7 @@ int ptn_p2_val = -1;
 void
 ptn_error(const char *error)
 {
-    printf("Pituner: %s\n", error);
+    fprintf(stderr, "Pituner: %s\n", error);
     exit(1);
 }
 
