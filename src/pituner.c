@@ -237,7 +237,13 @@ main(int argc, char* argv[])
 			 break;
  
 		 case 'h':
-			 printf("Pituner\n");
+			 printf("\n");
+			 printf("Usage: pituner [options]\n");
+			 printf("\n");
+			 printf("  -d        Enabled debug mode\n");
+			 printf("  -h        Display this help\n");
+			 printf("  -s <file> Load station file\n");
+			 printf("\n");
 			 exit(0);
 			 break;
 		 }
