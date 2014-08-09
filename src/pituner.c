@@ -5,6 +5,7 @@
 
 
 #include <stdlib.h>
+#include <stdarg.h>
 #include <string.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -57,6 +58,24 @@ ptn_error(const char *error)
 {
 	fprintf(stderr, "Pituner: %s\n", error);
 	exit(1);
+}
+
+void
+ptn_debug(const char *format, ...)
+{
+	va_list args;
+	va_start(args, format);
+
+	const char *msg_prefix = "Pituner: ";
+
+	char *msg = malloc((strlen(msg_prefix) + strlen(format) + 2) * sizeof(char));
+	sprintf(msg, "%s%s\n", msg_prefix, format);
+
+	if (ptn_debug_mode)
+		vfprintf(stdout, msg, args);
+
+	free(msg);
+	va_end(args);
 }
 
 
