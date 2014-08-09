@@ -139,6 +139,9 @@ ptn_free()
 		free(s);
 		s = s_next;
 	}
+
+	BASS_StreamFree(chan);
+	BASS_Free();
 }
 
 
@@ -173,6 +176,43 @@ ptn_check_dial()
 	return change;
 }
 
+void
+ptn_load_station()
+{
+	BASS_StreamFree(chan);
+	chan = BASS_StreamCreateURL(ptn_current_station->url, 0, BASS_STREAM_BLOCK | BASS_STREAM_STATUS | BASS_STREAM_AUTOFREE, NULL, 0);
+}
+
+void
+ptn_play_station()
+{
+	int progress;
+	struct ptn_display info;
+
+	while (1) {
+		progress = (BASS_StreamGetFilePosition(chan, BASS_FILEPOS_BUFFER) * 100) / BASS_StreamGetFilePosition(chan, BASS_FILEPOS_END);
+
+		if (progress > 75) {
+			BASS_ChannelPlay(chan, FALSE);
+
+			while (1) {
+				info = ptn_get_stream_info();
+				ptn_update_display(&info);
+				ptn_check_dial();
+
+				sleep(1);
+			}
+		}
+
+		sleep(1);
+	}
+}
+
+void
+ptn_stop_station()
+{
+	BASS_ChannelStop(chan);
+}
 
 void
 ptn_change_station(int offset)
@@ -202,24 +242,24 @@ ptn_change_station(int offset)
 int
 main(int argc, char* argv[])
 {
-   int c;
+	int c;
  
-   while (1) {
-	   static struct option long_options[] = {
-		   {"debug", no_argument, &ptn_debug_mode, 1},
-		   {"help", no_argument, 0, 'h'},
-		   {"stations", required_argument, 0, 's'},
-		   {0}
-	   };
+	while (1) {
+		static struct option long_options[] = {
+			{"debug", no_argument, &ptn_debug_mode, 1},
+			{"help", no_argument, 0, 'h'},
+			{"stations", required_argument, 0, 's'},
+			{0}
+		};
 
-	   int option_index = 0;
+		int option_index = 0;
  
-	   c = getopt_long(argc, argv, "hs:", long_options, &option_index);
+		c = getopt_long(argc, argv, "hs:", long_options, &option_index);
  
-	   if (c == -1)
-		   break;
+		if (c == -1)
+			break;
  
-	   switch (c) {
+		switch (c) {
 		 case 0:
 			 if (long_options[option_index].flag != 0)
 				 break;
@@ -281,31 +321,15 @@ main(int argc, char* argv[])
 	pullUpDnControl(PTN_DIAL_PIN2, PUD_UP);
 
 	BASS_SetVolume(1);
-	BASS_SetConfig(BASS_CONFIG_NET_PLAYLIST, 1); // enable playlist processing
-	BASS_SetConfig(BASS_CONFIG_NET_PREBUF, 0); // minimize automatic pre-buffering, so we can do it (and display it) instead
-
-	BASS_StreamFree(chan);
-	ptn_change_station(0);
-	chan = BASS_StreamCreateURL(ptn_current_station->url, 0, BASS_STREAM_BLOCK | BASS_STREAM_STATUS | BASS_STREAM_AUTOFREE, NULL, 0);
 	
-	while (1) {
-		int progress = (BASS_StreamGetFilePosition(chan, BASS_FILEPOS_BUFFER) * 100) / BASS_StreamGetFilePosition(chan, BASS_FILEPOS_END);
+	// enable playlist processing
+	BASS_SetConfig(BASS_CONFIG_NET_PLAYLIST, 1);
 
-		if (progress > 75) {
-			BASS_ChannelPlay(chan, FALSE);
-			while (1) {
-				struct ptn_display info = ptn_get_stream_info();
-				ptn_update_display(&info);
-				ptn_check_dial();
-				sleep(1);
-			}
-		}
+	// minimize automatic pre-buffering, so we can do it (and display it) instead
+	BASS_SetConfig(BASS_CONFIG_NET_PREBUF, 0); 
 
-		sleep(1);
-	}
+	ptn_load_station();
+	ptn_play_station();
 
-	BASS_StreamFree(chan);
-	BASS_Free();
-
-	return 0;
+	return EXIT_SUCCESS;
 }
