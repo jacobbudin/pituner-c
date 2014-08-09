@@ -199,6 +199,11 @@ ptn_load_station()
 {
 	BASS_StreamFree(chan);
 	chan = BASS_StreamCreateURL(ptn_current_station->url, 0, BASS_STREAM_BLOCK | BASS_STREAM_STATUS | BASS_STREAM_AUTOFREE, NULL, 0);
+
+	if (chan)
+		ptn_debug("Loaded station: \"%s\" (%s)", ptn_current_station->name, ptn_current_station->url);
+	else
+		ptn_debug("Couldn't load station: \"%s\" (%s)", ptn_current_station->name, ptn_current_station->url);
 }
 
 void
@@ -264,7 +269,7 @@ main(int argc, char* argv[])
  
 	while (1) {
 		static struct option long_options[] = {
-			{"debug", no_argument, &ptn_debug_mode, 1},
+			{"debug", no_argument, 0, 'd'},
 			{"help", no_argument, 0, 'h'},
 			{"stations", required_argument, 0, 's'},
 			{0}
@@ -272,38 +277,30 @@ main(int argc, char* argv[])
 
 		int option_index = 0;
  
-		c = getopt_long(argc, argv, "hs:", long_options, &option_index);
+		c = getopt_long(argc, argv, "dhs:", long_options, &option_index);
  
 		if (c == -1)
 			break;
  
 		switch (c) {
-		 case 0:
-			 if (long_options[option_index].flag != 0)
-				 break;
-
-			 printf("option %s", long_options[option_index].name);
-
-			 if (optarg)
-				 printf(" with arg %s", optarg);
-
-			 printf("\n");
-			 break;
- 
-		 case 's':
-			 ptn_station_file = strdup(optarg);
-			 break;
- 
-		 case 'h':
-			 printf("\n");
-			 printf("Usage: pituner [options]\n");
-			 printf("\n");
-			 printf("  -d        Enabled debug mode\n");
-			 printf("  -h        Display this help\n");
-			 printf("  -s <file> Load station file\n");
-			 printf("\n");
-			 exit(0);
-			 break;
+			case 'd':
+				ptn_debug_mode = 1;
+				break;
+	 
+			case 's':
+				ptn_station_file = strdup(optarg);
+				break;
+	 
+			case 'h':
+				printf("\n");
+				printf("Usage: pituner [options]\n");
+				printf("\n");
+				printf("  -d        Enabled debug mode\n");
+				printf("  -h        Display this help\n");
+				printf("  -s <file> Load station file\n");
+				printf("\n");
+				exit(0);
+				break;
 		 }
 	 }
  
