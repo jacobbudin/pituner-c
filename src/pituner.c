@@ -86,11 +86,12 @@ ptn_read_config()
 	struct ptn_station *s_prev = NULL;
 
 	root_value = json_parse_file(ptn_station_file);
-	if (json_value_get_type(root_value) != JSONArray) {
+
+	if (json_value_get_type(root_value) != JSONArray)
 		ptn_error("stations.json is not valid");
-	}
 
 	stations = json_value_get_array(root_value);
+
 	for (i = 0; i < json_array_get_count(stations); i++) {
 		station = json_array_get_object(stations, i);
 		s = malloc(sizeof(struct ptn_station));
@@ -105,6 +106,7 @@ ptn_read_config()
 		s->url = strdup(json_object_get_string(station, "url"));
 		s->next = NULL;
 		s->prev = s_prev;
+
 		if (s_prev)
 			s_prev->next = s;
 
@@ -118,9 +120,8 @@ ptn_read_config()
 void
 ptn_reset_station()
 {
-	while (ptn_current_station->prev) {
+	while (ptn_current_station->prev)
 		ptn_current_station = ptn_current_station->prev;
-	}
 }
 
 
@@ -157,10 +158,8 @@ ptn_check_dial()
 		return 0;
 	}
 
-	if (p1_val == ptn_p1_val &&
-			p2_val == ptn_p2_val) {
+	if (p1_val == ptn_p1_val && p2_val == ptn_p2_val)
 		return 0;
-	}
 
 	int change;
 
