@@ -174,7 +174,7 @@ ptn_check_dial()
 	if (ptn_p1_val == -1) {
 		ptn_p1_val = p1_val;
 		ptn_p2_val = p2_val;
-		return 0;
+			return 0;
 	}
 
 	if (p1_val == ptn_p1_val && p2_val == ptn_p2_val)
@@ -211,6 +211,9 @@ ptn_play_station()
 {
 	int progress;
 	struct ptn_display info;
+
+	if (!chan)
+		return;
 
 	while (1) {
 		progress = (BASS_StreamGetFilePosition(chan, BASS_FILEPOS_BUFFER) * 100) / BASS_StreamGetFilePosition(chan, BASS_FILEPOS_END);
