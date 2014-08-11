@@ -164,8 +164,17 @@ ptn_free()
 		s = s_next;
 	}
 
-	BASS_StreamFree(chan);
+	if (chan)
+		BASS_StreamFree(chan);
+
 	BASS_Free();
+}
+
+
+int
+ptn_check_keyboard()
+{
+	return 0;
 }
 
 
@@ -201,7 +210,9 @@ ptn_check_dial()
 void
 ptn_load_station()
 {
-	BASS_StreamFree(chan);
+	if (chan)
+		BASS_StreamFree(chan);
+
 	chan = BASS_StreamCreateURL(ptn_current_station->url, 0, BASS_STREAM_BLOCK | BASS_STREAM_STATUS | BASS_STREAM_AUTOFREE, NULL, 0);
 
 	if (chan)
@@ -214,6 +225,7 @@ void
 ptn_play_station()
 {
 	int progress;
+	int offset;
 	struct ptn_display info;
 
 	if (!chan)
@@ -228,9 +240,16 @@ ptn_play_station()
 			while (1) {
 				info = ptn_get_stream_info();
 				ptn_update_display(&info);
-				ptn_check_dial();
 
-				sleep(1);
+				// determine if station should be changed
+				offset = ptn_check_dial() + ptn_check_keyboard();
+
+				if (offset) {
+					ptn_stop_station();
+					ptn_change_station(offset);
+					return;
+				}
+
 			}
 		}
 
@@ -266,6 +285,9 @@ ptn_change_station(int offset)
 		return;
 	
 	ptn_current_station = s;
+
+	ptn_load_station();
+	ptn_play_station();
 }
 
 
