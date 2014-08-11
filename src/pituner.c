@@ -14,6 +14,7 @@
 #include <wiringPi.h>
 #include <lcd.h>
 #include "parson.h"
+#include "pituner.h"
 
 
 #define PTN_DIAL_PIN1 4
