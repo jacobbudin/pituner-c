@@ -64,15 +64,18 @@ void
 ptn_debug(const char *format, ...)
 {
 	va_list args;
+	const char *msg_prefix = "Pituner: ";
+	char *msg;
+
+	if (!ptn_debug_mode)
+		return;
+
 	va_start(args, format);
 
-	const char *msg_prefix = "Pituner: ";
-
-	char *msg = malloc((strlen(msg_prefix) + strlen(format) + 2) * sizeof(char));
+	msg = malloc((strlen(msg_prefix) + strlen(format) + 2) * sizeof(char));
 	sprintf(msg, "%s%s\n", msg_prefix, format);
 
-	if (ptn_debug_mode)
-		vfprintf(stdout, msg, args);
+	vfprintf(stdout, msg, args);
 
 	free(msg);
 	va_end(args);
