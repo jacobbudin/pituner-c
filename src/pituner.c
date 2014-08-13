@@ -260,7 +260,8 @@ ptn_play_station()
 void
 ptn_stop_station()
 {
-	BASS_ChannelStop(chan);
+	if (chan)
+		BASS_ChannelStop(chan);
 }
 
 void
