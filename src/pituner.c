@@ -9,12 +9,14 @@
 #include <string.h>
 #include <stdio.h>
 #include <unistd.h>
+#include <signal.h>
 #include <getopt.h>
 #include <bass.h>
 #include <wiringPi.h>
 #include <lcd.h>
 #include "parson.h"
 #include "pituner.h"
+#include "ptn_signal.h"
 
 
 #define PTN_DIAL_PIN1 4
@@ -372,6 +374,13 @@ main(int argc, char* argv[])
 
 	// minimize automatic pre-buffering, so we can do it (and display it) instead
 	BASS_SetConfig(BASS_CONFIG_NET_PREBUF, 0); 
+
+	// register SIGTERM signal
+	struct sigaction action;
+	action.sa_handler = ptn_end;
+	sigemptyset(&action.sa_mask);
+	action.sa_flags = 0;
+	sigaction(SIGTERM, &action, NULL);
 
 	ptn_load_station();
 	ptn_play_station();
