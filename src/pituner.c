@@ -181,19 +181,19 @@ ptn_check_keyboard()
 int
 ptn_check_dial()
 {
+	int change;
 	int p1_val = digitalRead(PTN_DIAL_PIN1);
 	int p2_val = digitalRead(PTN_DIAL_PIN2);
 
 	if (ptn_p1_val == -1) {
 		ptn_p1_val = p1_val;
 		ptn_p2_val = p2_val;
-			return 0;
+		return 0;
 	}
 
 	if (p1_val == ptn_p1_val && p2_val == ptn_p2_val)
 		return 0;
 
-	int change;
 
 	if (p1_val != ptn_p1_val) {
 		change = ((p1_val + p2_val) == 1) ? 1 : -1;
