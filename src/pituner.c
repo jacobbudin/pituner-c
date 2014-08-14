@@ -21,6 +21,7 @@
 
 #define PTN_DIAL_PIN1 4
 #define PTN_DIAL_PIN2 5
+#define PTN_TAG_SEPARATOR " - "
 
 
 HSTREAM ptn_chan;
@@ -37,11 +38,14 @@ struct ptn_station{
 };
 
 
-struct ptn_display{
-	char *line1;
-	char *line2;
+struct ptn_stream{
+	char *title;
+	char *song;
+	char *artist;
 };
 
+
+struct ptn_stream  ptn_current_stream;
 
 struct ptn_station  *ptn_current_station;
 
@@ -85,18 +89,57 @@ ptn_debug(const char *format, ...)
 }
 
 
-struct ptn_display
-ptn_get_stream_info()
+void
+ptn_update_stream()
 {
-	struct ptn_display info = {"Hello", "World"};
-	return info;
+	const char *tags;
+	char *title;
+	int i = 0;
+
+	tags = BASS_ChannelGetTags(ptn_chan, BASS_TAG_META);
+
+	if (ptn_current_stream.title)
+		free(ptn_current_stream.title);
+
+	ptn_current_stream.title = title = malloc((strlen(tags)+1)*sizeof(char));
+
+	// check if abides by expected format
+	if (strncmp(tags, "StreamTitle='", 13) != 0) {
+		ptn_current_stream.title = "\0";
+		return;
+	}
+	
+	while (*tags) {
+		if (strncmp(tags, "';StreamUrl=", 12) == 0) {
+			*title = '\0';
+			break;
+		}
+
+		if (i >= 13) {
+			*title = *tags;
+			title++;
+		}
+
+		i++;
+		tags++;
+	}
+
+	// does it include an artist-song separator
+	if (!(ptn_current_stream.song = strstr(ptn_current_stream.title, PTN_TAG_SEPARATOR))) {
+		return;
+	}
+
+	*ptn_current_stream.song = '\0';
+
+	ptn_current_stream.artist = ptn_current_stream.title;
+	ptn_current_stream.song += strlen(PTN_TAG_SEPARATOR);
 }
 
 
 void
-ptn_update_display(struct ptn_display *info)
+ptn_update_display()
 {
-	lcdPrintf(ptn_display_fd, "%s\n%s", info->line1, info->line2);
+	lcdPrintf(ptn_display_fd, "%s\n%s", ptn_current_stream.artist, ptn_current_stream.song);
 }
 
 
@@ -228,7 +271,6 @@ ptn_play_station()
 {
 	int progress;
 	int offset;
-	struct ptn_display info;
 
 	if (!ptn_chan)
 		return;
@@ -240,8 +282,8 @@ ptn_play_station()
 			BASS_ChannelPlay(ptn_chan, FALSE);
 
 			while (1) {
-				info = ptn_get_stream_info();
-				ptn_update_display(&info);
+				ptn_update_stream();
+				ptn_update_display();
 
 				// determine if station should be changed
 				offset = ptn_check_dial() + ptn_check_keyboard();
@@ -251,6 +293,8 @@ ptn_play_station()
 					ptn_change_station(offset);
 					return;
 				}
+
+				sleep(1);
 
 			}
 		}
