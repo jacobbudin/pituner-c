@@ -23,7 +23,7 @@
 #define PTN_DIAL_PIN2 5
 
 
-HSTREAM chan;
+HSTREAM ptn_chan;
 
 
 static int ptn_debug_mode = 0;
@@ -166,8 +166,8 @@ ptn_free()
 		s = s_next;
 	}
 
-	if (chan)
-		BASS_StreamFree(chan);
+	if (ptn_chan)
+		BASS_StreamFree(ptn_chan);
 
 	BASS_Free();
 }
@@ -212,12 +212,12 @@ ptn_check_dial()
 void
 ptn_load_station()
 {
-	if (chan)
-		BASS_StreamFree(chan);
+	if (ptn_chan)
+		BASS_StreamFree(ptn_chan);
 
-	chan = BASS_StreamCreateURL(ptn_current_station->url, 0, BASS_STREAM_BLOCK | BASS_STREAM_STATUS | BASS_STREAM_AUTOFREE, NULL, 0);
+	ptn_chan = BASS_StreamCreateURL(ptn_current_station->url, 0, BASS_STREAM_BLOCK | BASS_STREAM_STATUS | BASS_STREAM_AUTOFREE, NULL, 0);
 
-	if (chan)
+	if (ptn_chan)
 		ptn_debug("Loaded station: \"%s\" (%s)", ptn_current_station->name, ptn_current_station->url);
 	else
 		ptn_debug("Couldn't load station: \"%s\" (%s)", ptn_current_station->name, ptn_current_station->url);
@@ -230,14 +230,14 @@ ptn_play_station()
 	int offset;
 	struct ptn_display info;
 
-	if (!chan)
+	if (!ptn_chan)
 		return;
 
 	while (1) {
-		progress = (BASS_StreamGetFilePosition(chan, BASS_FILEPOS_BUFFER) * 100) / BASS_StreamGetFilePosition(chan, BASS_FILEPOS_END);
+		progress = (BASS_StreamGetFilePosition(ptn_chan, BASS_FILEPOS_BUFFER) * 100) / BASS_StreamGetFilePosition(ptn_chan, BASS_FILEPOS_END);
 
 		if (progress > 75) {
-			BASS_ChannelPlay(chan, FALSE);
+			BASS_ChannelPlay(ptn_chan, FALSE);
 
 			while (1) {
 				info = ptn_get_stream_info();
@@ -262,8 +262,8 @@ ptn_play_station()
 void
 ptn_stop_station()
 {
-	if (chan)
-		BASS_ChannelStop(chan);
+	if (ptn_chan)
+		BASS_ChannelStop(ptn_chan);
 }
 
 void
