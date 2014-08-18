@@ -4,7 +4,19 @@
         "url": "http://prem1.di.fm:80/vocaltrance_hi?643945d6aa1da7d29705e61b"
     },
     {
-        "name": "Vocal Lounce",
-        "url": "http://listen.di.fm:80/premium_high/vocallounge.pls?643945d6aa1da7d29705e61b"
+        "name": "Epic Trance",
+        "url": "http://prem4.di.fm:80/epictrance_hi?643945d6aa1da7d29705e61b"
+    },
+    {
+        "name": "Club Sounds",
+        "url": "http://prem1.di.fm:80/club_hi?643945d6aa1da7d29705e61b"
+    },
+    {
+        "name": "Vocal Chillout",
+        "url": "http://prem1.di.fm:80/vocalchillout_hi?643945d6aa1da7d29705e61b"
+    },
+    {
+        "name": "Chillout Dreams",
+        "url": "http://prem1.di.fm:80/chilloutdreams_hi?643945d6aa1da7d29705e61b"
     }
 ]
