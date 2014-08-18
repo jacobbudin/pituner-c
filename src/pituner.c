@@ -56,6 +56,7 @@ char  *ptn_station_file = "etc/stations.json";
 int ptn_display_fd = -1;
 
 
+int ptn_d_dir = 0;
 int ptn_p1_val = -1;
 int ptn_p2_val = -1;
 
@@ -223,10 +224,17 @@ ptn_check_keyboard()
 }
 
 
+void
+ptn_reset_dial()
+{
+	ptn_p1_val = -1;
+	ptn_p2_val = -1;
+}
+
+
 int
 ptn_check_dial()
 {
-	int change;
 	int p1_val = digitalRead(PTN_DIAL_PIN1);
 	int p2_val = digitalRead(PTN_DIAL_PIN2);
 
@@ -239,17 +247,15 @@ ptn_check_dial()
 	if (p1_val == ptn_p1_val && p2_val == ptn_p2_val)
 		return 0;
 
-
-	if (p1_val != ptn_p1_val) {
-		change = ((p1_val + p2_val) == 1) ? 1 : -1;
-		ptn_p1_val = p1_val;
-	}
-	else {
-		change = ((p1_val + p2_val) != 1) ? 1 : -1;
-		ptn_p2_val = p2_val;
+	if ((p1_val + p2_val) == 1) {
+		ptn_d_dir = ((p1_val + ptn_p2_val) != 1) ? 1 : -1;
+		return 0;
 	}
 
-	return change;
+	ptn_p1_val = p1_val;
+	ptn_p2_val = p2_val;
+
+	return ptn_d_dir;
 }
 
 void
@@ -260,10 +266,14 @@ ptn_load_station()
 
 	ptn_chan = BASS_StreamCreateURL(ptn_current_station->url, 0, BASS_STREAM_BLOCK | BASS_STREAM_STATUS | BASS_STREAM_AUTOFREE, NULL, 0);
 
-	if (ptn_chan)
+	if (ptn_chan) {
 		ptn_debug("Loaded station: \"%s\" (%s)", ptn_current_station->name, ptn_current_station->url);
-	else
+	}
+	else {
 		ptn_debug("Couldn't load station: \"%s\" (%s)", ptn_current_station->name, ptn_current_station->url);
+		sleep(1);
+		ptn_change_station(ptn_d_dir || 1);
+	}
 }
 
 void
@@ -280,6 +290,7 @@ ptn_play_station()
 
 		if (progress > 75) {
 			BASS_ChannelPlay(ptn_chan, FALSE);
+			ptn_reset_dial();
 
 			while (1) {
 				ptn_update_stream();
@@ -289,13 +300,9 @@ ptn_play_station()
 				offset = ptn_check_dial() + ptn_check_keyboard();
 
 				if (offset) {
-					ptn_stop_station();
-					ptn_change_station(offset);
-					return;
+					if (ptn_change_station(offset))
+						return;
 				}
-
-				sleep(1);
-
 			}
 		}
 
@@ -310,14 +317,14 @@ ptn_stop_station()
 		BASS_ChannelStop(ptn_chan);
 }
 
-void
+int
 ptn_change_station(int offset)
 {
 	struct ptn_station *s;
 	int i;
 
 	if (!offset)
-		return;
+		return 0;
 
 	s = ptn_current_station;
 
@@ -329,12 +336,12 @@ ptn_change_station(int offset)
 	}
 
 	if (ptn_current_station == s)
-		return;
-	
-	ptn_current_station = s;
+		return 0;
 
+	ptn_current_station = s;
 	ptn_load_station();
-	ptn_play_station();
+
+	return 1;
 }
 
 
@@ -427,7 +434,9 @@ main(int argc, char* argv[])
 	sigaction(SIGTERM, &action, NULL);
 
 	ptn_load_station();
-	ptn_play_station();
+
+	while (ptn_current_station)
+		ptn_play_station();
 
 	return EXIT_SUCCESS;
 }
