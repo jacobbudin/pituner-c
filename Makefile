@@ -4,7 +4,7 @@ CFLAGS	:= -g -Wall
 LIBS	:= -lbass -lwiringPi -lwiringPiDev
 
 SDIR     = src
-SRC	:= pituner.c parson.c
+SRC	:= pituner.c ptn_signal.c parson.c
 
 BIN	:= pituner
 
