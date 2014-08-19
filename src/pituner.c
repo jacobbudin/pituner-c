@@ -259,6 +259,7 @@ ptn_free()
 		BASS_StreamFree(ptn_chan);
 
 	BASS_Free();
+	lcdClear(ptn_display_fd);
 }
 
 
