@@ -99,6 +99,18 @@ ptn_update_stream()
 
 	tags = BASS_ChannelGetTags(ptn_chan, BASS_TAG_META);
 
+	if (!tags) {
+		if (ptn_current_stream.title && strstr(ptn_current_station->name, ptn_current_stream.title)) {
+			return 0;
+		}
+		else {
+			ptn_current_stream.title = strdup(ptn_current_station->name);
+			ptn_current_stream.artist = ptn_current_stream.title;
+			ptn_current_stream.song = "\0";
+			return 1;
+		}	
+	}
+
 	// stream already exit? check if changed
 	if (ptn_current_stream.title) {
 		if (strstr(tags, ptn_current_stream.title) && strstr(tags, ptn_current_stream.song))
@@ -151,6 +163,10 @@ ptn_update_display()
 	char *artist = ptn_current_stream.artist;
 	char *song = ptn_current_stream.song;
 
+	lcdClear(ptn_display_fd);
+	lcdCursor(ptn_display_fd, 0);
+	lcdCursorBlink(ptn_display_fd, 0);
+
 	if (!ptn_current_stream.title)
 		return;
 
@@ -160,7 +176,6 @@ ptn_update_display()
 		x++;
 		artist++;
 	}
-
 	x = 0;
 
 	while (*song) {
@@ -302,6 +317,9 @@ ptn_load_station()
 		sleep(1);
 		ptn_change_station(ptn_d_dir || 1);
 	}
+
+	if (ptn_update_stream())
+		ptn_update_display();
 }
 
 void
