@@ -482,6 +482,7 @@ main(int argc, char* argv[])
 	sigemptyset(&action.sa_mask);
 	action.sa_flags = 0;
 	sigaction(SIGTERM, &action, NULL);
+	sigaction(SIGINT, &action, NULL);
 
 	ptn_load_station();
 
