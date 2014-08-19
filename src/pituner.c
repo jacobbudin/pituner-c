@@ -90,7 +90,7 @@ ptn_debug(const char *format, ...)
 }
 
 
-void
+int
 ptn_update_stream()
 {
 	const char *tags;
@@ -99,15 +99,20 @@ ptn_update_stream()
 
 	tags = BASS_ChannelGetTags(ptn_chan, BASS_TAG_META);
 
-	if (ptn_current_stream.title)
-		free(ptn_current_stream.title);
+	// stream already exit? check if changed
+	if (ptn_current_stream.title) {
+		if (strstr(tags, ptn_current_stream.title) && strstr(tags, ptn_current_stream.song))
+			return 0;
+		else
+			free(ptn_current_stream.title);
+	}
 
 	ptn_current_stream.title = title = malloc((strlen(tags)+1)*sizeof(char));
 
 	// check if abides by expected format
 	if (strncmp(tags, "StreamTitle='", 13) != 0) {
 		ptn_current_stream.title = "\0";
-		return;
+		return 1;
 	}
 	
 	while (*tags) {
@@ -127,20 +132,43 @@ ptn_update_stream()
 
 	// does it include an artist-song separator
 	if (!(ptn_current_stream.song = strstr(ptn_current_stream.title, PTN_TAG_SEPARATOR))) {
-		return;
+		return 1;
 	}
 
 	*ptn_current_stream.song = '\0';
 
 	ptn_current_stream.artist = ptn_current_stream.title;
 	ptn_current_stream.song += strlen(PTN_TAG_SEPARATOR);
+
+	return 1;
 }
 
 
 void
 ptn_update_display()
 {
-	lcdPrintf(ptn_display_fd, "%s\n%s", ptn_current_stream.artist, ptn_current_stream.song);
+	int x = 0;
+	char *artist = ptn_current_stream.artist;
+	char *song = ptn_current_stream.song;
+
+	if (!ptn_current_stream.title)
+		return;
+
+	while (*artist) {
+		lcdPosition(ptn_display_fd, x, 0);
+		lcdPutchar(0, (unsigned char) *artist);
+		x++;
+		artist++;
+	}
+
+	x = 0;
+
+	while (*song) {
+		lcdPosition(ptn_display_fd, x, 1);
+		lcdPutchar(0, (unsigned char) *song);
+		x++;
+		song++;
+	}
 }
 
 
@@ -293,8 +321,9 @@ ptn_play_station()
 			ptn_reset_dial();
 
 			while (1) {
-				ptn_update_stream();
-				ptn_update_display();
+				// determine if stream data has been updated
+				if (ptn_update_stream())
+					ptn_update_display();
 
 				// determine if station should be changed
 				offset = ptn_check_dial() + ptn_check_keyboard();
@@ -405,7 +434,7 @@ main(int argc, char* argv[])
 		ptn_error("Can't initialize WiringPi");
 
 	// initialize LCD
-	ptn_display_fd = lcdInit(2, 16, 8, 11, 10, 0, 1, 2, 3, 4, 5, 6, 7);
+	ptn_display_fd = lcdInit(2, 16, 4, 11, 10, 0, 1, 2, 3, 0, 0, 0, 0);
 	if (ptn_display_fd == -1)
 		ptn_error("Can't initialize LCD");
 

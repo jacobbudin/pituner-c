@@ -1,7 +1,7 @@
 /* src/pituner.c */
 void ptn_error(const char *error);
 void ptn_debug(const char *format, ...);
-void ptn_update_stream(void);
+int ptn_update_stream(void);
 void ptn_update_display(void);
 void ptn_read_config(void);
 void ptn_reset_station(void);
