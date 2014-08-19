@@ -243,14 +243,16 @@ ptn_free()
 	struct ptn_station *s;
 	struct ptn_station *s_next;
 
-	ptn_reset_station();
+	if (ptn_current_station) {
+		ptn_reset_station();
 
-	s = ptn_current_station;
+		s = ptn_current_station;
 
-	while (s) {
-		s_next = s->next;
-		free(s);
-		s = s_next;
+		while (s) {
+			s_next = s->next;
+			free(s);
+			s = s_next;
+		}
 	}
 
 	if (ptn_chan)
