@@ -22,6 +22,8 @@
 #define PTN_DIAL_PIN1 4
 #define PTN_DIAL_PIN2 5
 #define PTN_TAG_SEPARATOR " - "
+#define PTN_LCD_ROWS 2
+#define PTN_LCD_COLS 16
 
 
 HSTREAM ptn_chan;
@@ -175,7 +177,11 @@ ptn_update_display()
 		lcdPutchar(0, (unsigned char) *artist);
 		x++;
 		artist++;
+
+		if (x == PTN_LCD_COLS)
+			break;
 	}
+
 	x = 0;
 
 	while (*song) {
@@ -183,6 +189,9 @@ ptn_update_display()
 		lcdPutchar(0, (unsigned char) *song);
 		x++;
 		song++;
+
+		if (x == PTN_LCD_COLS)
+			break;
 	}
 }
 
@@ -455,7 +464,7 @@ main(int argc, char* argv[])
 		ptn_error("Can't initialize WiringPi");
 
 	// initialize LCD
-	ptn_display_fd = lcdInit(2, 16, 4, 11, 10, 0, 1, 2, 3, 0, 0, 0, 0);
+	ptn_display_fd = lcdInit(PTN_LCD_ROWS, PTN_LCD_COLS, 4, 11, 10, 0, 1, 2, 3, 0, 0, 0, 0);
 	if (ptn_display_fd == -1)
 		ptn_error("Can't initialize LCD");
 
