@@ -17,6 +17,7 @@
 #include "parson.h"
 #include "pituner.h"
 #include "ptn_signal.h"
+#include "ptn_pls.h"
 
 
 #define PTN_DIAL_PIN1 4
@@ -316,10 +317,13 @@ ptn_check_dial()
 void
 ptn_load_station()
 {
+	char *stream_url;
+
 	if (ptn_chan)
 		BASS_StreamFree(ptn_chan);
 
-	ptn_chan = BASS_StreamCreateURL(ptn_current_station->url, 0, BASS_STREAM_BLOCK | BASS_STREAM_STATUS | BASS_STREAM_AUTOFREE, NULL, 0);
+	stream_url = ptn_get_stream_url(ptn_current_station->url);
+	ptn_chan = BASS_StreamCreateURL(stream_url, 0, BASS_STREAM_BLOCK | BASS_STREAM_STATUS | BASS_STREAM_AUTOFREE, NULL, 0);
 
 	if (ptn_chan) {
 		ptn_debug("Loaded station: \"%s\" (%s)", ptn_current_station->name, ptn_current_station->url);

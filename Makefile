@@ -1,10 +1,10 @@
 SHELL	:= /bin/sh
 CC 	:= gcc
 CFLAGS	:= -g -Wall
-LIBS	:= -lbass -lwiringPi -lwiringPiDev
+LIBS	:= -lcurl -lbass -lwiringPi -lwiringPiDev
 
 SDIR     = src
-SRC	:= pituner.c ptn_signal.c parson.c
+SRC	:= pituner.c ptn_signal.c ptn_pls.c parson.c
 
 ETCDIR   = etc
 
