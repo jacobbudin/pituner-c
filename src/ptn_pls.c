@@ -11,7 +11,20 @@
 char*
 ptn_parse_pls_file(FILE *f)
 {
-	return "http://prem1.di.fm:80/vocaltrance_hi?643945d6aa1da7d29705e61b";
+	char key[20], value[200];
+
+	// skip "[playlist]" first line
+	if (!fseek(f, 11, SEEK_SET)) {
+		ptn_debug(".pls malformed");
+		return NULL;
+	}
+
+	while (fscanf(f, "%19s=%199[^n]", key, value) == 2) {
+		if (strstr(key, "File"))
+			return strdup(value);
+	}
+
+	return NULL;
 }
 
 char*
@@ -21,10 +34,11 @@ ptn_get_stream_url(char *url)
 	CURLcode result;
 	char *station_url;
 	char *pls_f_name = tmpnam(NULL);
-	FILE *pls_f = fopen(pls_f_name, "wb+");
+	FILE *pls_f = fopen(pls_f_name, "w+");
+	printf("%s", pls_f_name);
 
 	if (!strstr(url, ".pls"))
-		return url;
+		return strdup(url);
 
 	ch = curl_easy_init();
 	curl_easy_setopt(ch, CURLOPT_URL, url);
@@ -33,7 +47,7 @@ ptn_get_stream_url(char *url)
 
 	if (result != CURLE_OK) {
 		ptn_debug("Error loading .pls file: %s", curl_easy_strerror(result));
-		return "\0";
+		return NULL;
 	}
 
 	curl_easy_cleanup(ch);

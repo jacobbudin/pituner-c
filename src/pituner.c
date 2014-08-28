@@ -324,6 +324,7 @@ ptn_load_station()
 
 	stream_url = ptn_get_stream_url(ptn_current_station->url);
 	ptn_chan = BASS_StreamCreateURL(stream_url, 0, BASS_STREAM_BLOCK | BASS_STREAM_STATUS | BASS_STREAM_AUTOFREE, NULL, 0);
+	free(stream_url);
 
 	if (ptn_chan) {
 		ptn_debug("Loaded station: \"%s\" (%s)", ptn_current_station->name, ptn_current_station->url);
