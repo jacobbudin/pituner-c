@@ -14,15 +14,17 @@ ptn_parse_pls_file(FILE *f)
 	char key[20], value[200];
 
 	// skip "[playlist]" first line
-	if (!fseek(f, 11, SEEK_SET)) {
+	if (fseek(f, 11, SEEK_SET) != 0) {
 		ptn_debug(".pls malformed");
 		return NULL;
 	}
 
-	while (fscanf(f, "%19s=%199[^n]", key, value) == 2) {
+	while (fscanf(f, "%19[^=]=%199[^\n]", key, value) == 2) {
 		if (strstr(key, "File"))
 			return strdup(value);
 	}
+
+	ptn_debug(".pls does not contain File key");
 
 	return NULL;
 }
@@ -51,6 +53,7 @@ ptn_get_stream_url(char *url)
 	}
 
 	curl_easy_cleanup(ch);
+	rewind(pls_f);
 	station_url = ptn_parse_pls_file(pls_f);
 	fclose(pls_f);
 	remove(pls_f_name);
