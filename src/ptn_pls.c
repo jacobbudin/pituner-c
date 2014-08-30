@@ -35,14 +35,27 @@ ptn_get_stream_url(char *url)
 	CURL *ch;
 	CURLcode result;
 	char *station_url;
-	char *pls_f_name = tmpnam(NULL);
-	FILE *pls_f = fopen(pls_f_name, "w+");
-	printf("%s", pls_f_name);
+	char *pls_f_name;
+	FILE *pls_f;
+
+	pls_f_name = tmpnam(NULL);
+
+	if (!pls_f_name)
+		ptn_error("Cannot create temporary .pls file name");
+
+	pls_f = fopen(pls_f_name, "w+");
+
+	if (!pls_f)
+		ptn_error("Cannot create temporary .pls file");
 
 	if (!strstr(url, ".pls"))
 		return strdup(url);
 
 	ch = curl_easy_init();
+
+	if (!ch)
+		ptn_error("Cannot intiate curl session");
+
 	curl_easy_setopt(ch, CURLOPT_URL, url);
 	curl_easy_setopt(ch, CURLOPT_WRITEDATA, (void *) pls_f);
 	result = curl_easy_perform(ch);
